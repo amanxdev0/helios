@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HELIOS — scroll from the Milky Way to Pluto</title>
-<meta name="description" content="HELIOS is a scroll-driven 3D voyage: start at the Milky Way, dive to the Sun, and fly past every planet line-wise out to Pluto — each with its name and moons, all as real HTML over a live 3D film.">
+<meta name="description" content="HELIOS is a scroll-driven 3D voyage: start at the Milky Way, pass neighbouring stars and the Oort Cloud, dive to the Sun, fly every planet line-wise out to Pluto and the Kuiper Belt, meet humanity's satellites, stations and interstellar Voyagers — all as real HTML over a live 3D film.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -29,16 +29,16 @@
 
 <main id="content">
 
-  <section class="chapter" data-from="0" data-to="0.065" aria-label="Intro">
+  <section class="chapter" data-from="0" data-to="0.045" aria-label="Intro">
     <div class="chapter-inner">
       <p class="eyebrow">A scroll-driven voyage</p>
       <h1 class="mega">HELIOS</h1>
-      <p class="lede">Start at the Milky Way. Dive to the Sun.<br>Fly past every planet, line-wise, out to Pluto.</p>
+      <p class="lede">Start at the Milky Way. Dive to the Sun.<br>Fly past every planet, line-wise, out to Pluto —<br>and meet everything humanity sent along the way.</p>
       <p class="scroll-hint"><span class="scroll-hint-arrow">↓</span> scroll to launch</p>
     </div>
   </section>
 
-  <section class="chapter" data-from="0.075" data-to="0.135" aria-label="Milky Way">
+  <section class="chapter" data-from="0.055" data-to="0.095" aria-label="Milky Way">
     <div class="chapter-inner">
       <p class="eyebrow">Stop 1 · The galaxy</p>
       <h2>The Milky Way</h2>
@@ -46,106 +46,136 @@
     </div>
   </section>
 
-  <section class="chapter" data-from="0.145" data-to="0.195" aria-label="Approach">
+  <section class="chapter" data-from="0.105" data-to="0.14" aria-label="Stellar neighborhood">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 2 · Inbound</p>
-      <h2>One star among billions.</h2>
-      <p class="body-copy">We leave the galactic view and fall toward a single, ordinary yellow dwarf — neighbours like Sirius and Betelgeuse shining in the dark around it. Ordinary, except it's ours.</p>
+      <p class="eyebrow">Stop 2 · Between the stars</p>
+      <h2>The stellar neighborhood</h2>
+      <p class="body-copy">Leaving the galaxy behind, we pass our Sun's neighbours: <strong>Proxima Centauri</strong> (4.25 light-years, the closest star of all), <strong>Alpha Centauri</strong> (4.37), <strong>Sirius</strong> (8.6 — the brightest star in our night sky), and the red supergiant <strong>Betelgeuse</strong> (~640 ly away, big enough to swallow Jupiter's orbit).</p>
     </div>
   </section>
 
-  <section class="chapter" data-from="0.205" data-to="0.265" aria-label="Sun">
+  <section class="chapter" data-from="0.15" data-to="0.185" aria-label="Oort Cloud">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 3 · The star</p>
+      <p class="eyebrow">Stop 3 · The ghost shell</p>
+      <h2>The Oort Cloud</h2>
+      <p class="body-copy">Before we reach the Sun, we cross a ghost shell: <strong>trillions of icy bodies</strong> orbiting 2,000–100,000 AU out — so distant that light takes over a year to cross it. This is where long-period comets fall from. No probe has ever reached it; even Voyager 1 won't arrive for another ~300 years.</p>
+    </div>
+  </section>
+
+  <section class="chapter" data-from="0.195" data-to="0.235" aria-label="Sun">
+    <div class="chapter-inner">
+      <p class="eyebrow">Stop 4 · The star</p>
       <h2>Sol — the Sun</h2>
       <p class="body-copy">99.86% of all mass in the solar system. 5,500°C at the surface, 15 million°C at the core — <strong>1.3 million Earths</strong> could fit inside it. Everything from here on orbits this furnace.</p>
+      <div class="moons"><span class="moon-label">Humans are touching it</span><span class="moon-chip">Parker Solar Probe · NASA 2018</span><span class="moon-chip">Aditya-L1 · ISRO 2023</span></div>
+      <p class="body-copy small-note">Parker is the fastest object ever built — 692,000 km/h through the corona. Aditya-L1 parks 1.5 million km away, watching the Sun full-time.</p>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.275" data-to="0.335" data-stop="Mercury" aria-label="Mercury">
+  <section class="chapter planet" data-from="0.245" data-to="0.285" data-stop="Mercury" aria-label="Mercury">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 4 · Planet I</p>
+      <p class="eyebrow">Stop 5 · Planet I</p>
       <h2>Mercury</h2>
       <p class="body-copy">The swift planet — a year here lasts just <strong>88 days</strong>. No atmosphere to hold heat, so it swings from −180°C at night to 430°C by day. <span class="nomoon">No moons.</span></p>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.345" data-to="0.405" data-stop="Venus" aria-label="Venus">
+  <section class="chapter planet" data-from="0.295" data-to="0.335" data-stop="Venus" aria-label="Venus">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 5 · Planet II</p>
+      <p class="eyebrow">Stop 6 · Planet II</p>
       <h2>Venus</h2>
       <p class="body-copy">The hottest planet — <strong>465°C</strong>, hotter than Mercury, wrapped in crushing CO₂ skies. It spins <em>backwards</em>, and one Venusian day outlasts its entire year. <span class="nomoon">No moons.</span></p>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.415" data-to="0.475" data-stop="Earth" aria-label="Earth">
+  <section class="chapter planet" data-from="0.345" data-to="0.385" data-stop="Earth" aria-label="Earth">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 6 · Planet III · Home</p>
+      <p class="eyebrow">Stop 7 · Planet III · Home</p>
       <h2>Earth</h2>
       <p class="body-copy">The only known world with life — 71% ocean, one magnetic shield, one perfect distance from the Sun.</p>
-      <div class="moons"><span class="moon-label">Moons</span><span class="moon-chip">Moon</span></div>
+      <div class="moons"><span class="moon-label">Moon</span><span class="moon-chip">Moon</span><span class="moon-more">+ Chandrayaan-3's Vikram lander sits near its south pole — first ever, Aug 2023</span></div>
+      <div class="moons"><span class="moon-label">Up there right now</span><span class="moon-chip">ISS · crewed since 2000</span><span class="moon-chip">Hubble · 1990</span><span class="moon-chip">Tiangong · 2022</span></div>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.485" data-to="0.545" data-stop="Mars" aria-label="Mars">
+  <section class="chapter planet" data-from="0.395" data-to="0.435" data-stop="Mars" aria-label="Mars">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 7 · Planet IV</p>
+      <p class="eyebrow">Stop 8 · Planet IV</p>
       <h2>Mars</h2>
       <p class="body-copy">The red planet hosts <strong>Olympus Mons</strong>, a volcano nearly three times the height of Everest, and valleys carved by ancient rivers.</p>
       <div class="moons"><span class="moon-label">Moons</span><span class="moon-chip">Phobos</span><span class="moon-chip">Deimos</span></div>
+      <div class="moons"><span class="moon-label">Our machines there</span><span class="moon-chip">Mangalyaan · ISRO 2013</span><span class="moon-chip">Perseverance · NASA 2021</span></div>
+      <p class="body-copy small-note">Mangalyaan made India the fourth to reach Mars — on its first try. Perseverance is collecting samples in Jezero Crater today.</p>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.555" data-to="0.615" data-stop="Jupiter" aria-label="Jupiter">
+  <section class="chapter planet" data-from="0.445" data-to="0.485" data-stop="Jupiter" aria-label="Jupiter">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 8 · Planet V · The giant</p>
+      <p class="eyebrow">Stop 9 · Planet V · The giant</p>
       <h2>Jupiter</h2>
       <p class="body-copy">The king — <strong>1,300 Earths</strong> could fit inside. Its Great Red Spot is a storm wider than our entire planet, raging for centuries.</p>
       <div class="moons"><span class="moon-label">Moons · 95 known</span><span class="moon-chip">Io</span><span class="moon-chip">Europa</span><span class="moon-chip">Ganymede</span><span class="moon-chip">Callisto</span><span class="moon-more">+ 91 more</span></div>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.625" data-to="0.685" data-stop="Saturn" aria-label="Saturn">
+  <section class="chapter planet" data-from="0.495" data-to="0.535" data-stop="Saturn" aria-label="Saturn">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 9 · Planet VI · The jewel</p>
+      <p class="eyebrow">Stop 10 · Planet VI · The jewel</p>
       <h2>Saturn</h2>
       <p class="body-copy">Rings of ancient ice and rock, wider than the Earth–Moon distance yet often just metres thick. Saturn is light enough to <strong>float in water</strong>.</p>
       <div class="moons"><span class="moon-label">Moons · 146 known</span><span class="moon-chip">Titan</span><span class="moon-chip">Enceladus</span><span class="moon-chip">Rhea</span><span class="moon-chip">Iapetus</span><span class="moon-chip">Dione</span><span class="moon-more">+ 141 more</span></div>
+      <div class="moons"><span class="moon-label">Our machine there</span><span class="moon-chip">Cassini · NASA/ESA 2004–2017</span><span class="moon-more">orbited 13 years, then dove into Saturn itself</span></div>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.695" data-to="0.755" data-stop="Uranus" aria-label="Uranus">
+  <section class="chapter planet" data-from="0.545" data-to="0.585" data-stop="Uranus" aria-label="Uranus">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 10 · Planet VII · The sideways world</p>
+      <p class="eyebrow">Stop 11 · Planet VII · The sideways world</p>
       <h2>Uranus</h2>
       <p class="body-copy">Knocked on its side — it rolls around the Sun at a <strong>98° tilt</strong>. Methane paints it teal, and its atmosphere plunges to −224°C, the coldest of any planet.</p>
       <div class="moons"><span class="moon-label">Moons · 28 known</span><span class="moon-chip">Titania</span><span class="moon-chip">Oberon</span><span class="moon-chip">Miranda</span><span class="moon-chip">Ariel</span><span class="moon-chip">Umbriel</span><span class="moon-more">+ 23 more</span></div>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.765" data-to="0.825" data-stop="Neptune" aria-label="Neptune">
+  <section class="chapter planet" data-from="0.595" data-to="0.635" data-stop="Neptune" aria-label="Neptune">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 11 · Planet VIII · The windy world</p>
+      <p class="eyebrow">Stop 12 · Planet VIII · The windy world</p>
       <h2>Neptune</h2>
       <p class="body-copy">Found by mathematics before any telescope saw it. Supersonic winds hit <strong>2,100 km/h</strong> — the fastest in the solar system.</p>
       <div class="moons"><span class="moon-label">Moons · 16 known</span><span class="moon-chip">Triton</span><span class="moon-chip">Proteus</span><span class="moon-chip">Nereid</span><span class="moon-more">+ 13 more</span></div>
     </div>
   </section>
 
-  <section class="chapter planet" data-from="0.835" data-to="0.895" data-stop="Pluto" aria-label="Pluto">
+  <section class="chapter planet" data-from="0.645" data-to="0.685" data-stop="Pluto" aria-label="Pluto">
     <div class="chapter-inner">
-      <p class="eyebrow">Stop 12 · The dwarf</p>
+      <p class="eyebrow">Stop 13 · The dwarf</p>
       <h2>Pluto</h2>
-      <p class="body-copy">Demoted but beloved — a dwarf planet with a <strong>heart-shaped glacier</strong> bigger than Texas, and a moon, Charon, half its own size. The edge of the classical map.</p>
+      <p class="body-copy">Demoted but beloved — a dwarf planet with a <strong>heart-shaped glacier</strong> bigger than Texas, and a moon, Charon, half its own size.</p>
       <div class="moons"><span class="moon-label">Moons · 5 known</span><span class="moon-chip">Charon</span><span class="moon-chip">Nix</span><span class="moon-chip">Hydra</span><span class="moon-chip">Kerberos</span><span class="moon-chip">Styx</span></div>
     </div>
   </section>
 
-  <section class="chapter" data-from="0.905" data-to="0.985" aria-label="Finale">
+  <section class="chapter" data-from="0.695" data-to="0.73" aria-label="Kuiper Belt">
+    <div class="chapter-inner">
+      <p class="eyebrow">Stop 14 · Pluto's neighborhood</p>
+      <h2>The Kuiper Belt</h2>
+      <p class="body-copy">We never left the debris behind — Pluto lives inside it. A donut of icy worlds <strong>30–55 AU</strong> out, with 3,000+ known objects: Eris, Haumea, Makemake… Pluto is just the most famous resident.</p>
+    </div>
+  </section>
+
+  <section class="chapter" data-from="0.74" data-to="0.80" aria-label="Voyagers">
+    <div class="chapter-inner">
+      <p class="eyebrow">Stop 15 · Interstellar</p>
+      <h2>The Voyagers</h2>
+      <p class="body-copy"><strong>Voyager 1</strong> (NASA, 1977) is the farthest human-made thing in existence — <strong>15+ billion miles</strong> out, in interstellar space since 2012, still phoning home. <strong>Voyager 2</strong> (1977) visited all four giant planets — the only probe ever to do it. Both carry the Golden Record: the sounds of Earth, in case someone finds them.</p>
+    </div>
+  </section>
+
+  <section class="chapter" data-from="0.82" data-to="0.97" aria-label="Finale">
     <div class="chapter-inner">
       <p class="eyebrow">Final stop</p>
       <h2 class="mega small">THE FAMILY<br>PORTRAIT</h2>
-      <p class="body-copy">Eight planets, one dwarf, 290+ known moons — all falling around one star, all inside one galaxy of hundreds of billions. You just crossed 9 billion kilometres by scrolling.</p>
+      <p class="body-copy">Eight planets, one dwarf, 290+ known moons, a ghost shell of comets — and a handful of our machines sailing through it all. You just crossed 9 billion kilometres by scrolling.</p>
       <p class="scroll-hint"><span class="scroll-hint-arrow">↑</span> scroll back up to fly home</p>
     </div>
   </section>

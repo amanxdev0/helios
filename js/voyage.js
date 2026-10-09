@@ -1,7 +1,8 @@
 /* HELIOS — scroll-driven solar system voyage.
- * Same interpolation engine as SCROLLFILM: the scroll position is a playhead
- * (0 → 1); the render loop eases toward it every frame, so ~20 Hz scroll
- * input still renders buttery motion at display rate.
+ * Milky Way → stellar neighborhood → Oort Cloud → Sun → planets → Kuiper Belt
+ * → Voyagers. Same interpolation engine as SCROLLFILM: the scroll position is
+ * a playhead (0 → 1); the render loop eases toward it every frame, so ~20 Hz
+ * scroll input still renders buttery motion at display rate.
  */
 import * as THREE from 'three';
 
@@ -35,7 +36,7 @@ renderer.setPixelRatio(pixelRatio);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x04060d);
-scene.fog = new THREE.Fog(0x04060d, 400, 1600);
+scene.fog = new THREE.Fog(0x04060d, 420, 1700);
 
 const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 4000);
 
@@ -86,7 +87,7 @@ function rockyTexture(base, dark, light) {
       g.beginPath(); g.arc(rnd(0, w), rnd(0, h), r, 0, 7); g.fill();
     }
     g.globalAlpha = 1;
-    for (let i = 0; i < 26; i++) { // craters
+    for (let i = 0; i < 26; i++) {
       const x = rnd(0, w), y = rnd(0, h), r = rnd(3, 10);
       g.fillStyle = dark; g.globalAlpha = 0.35;
       g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
@@ -180,7 +181,7 @@ const galaxyGroup = new THREE.Group();
 galaxyGroup.rotation.x = 0.5;
 scene.add(galaxyGroup);
 
-/* "you are here" marker at the solar system's spot */
+/* "you are here" marker */
 const markerGroup = new THREE.Group();
 const markerRing = new THREE.Mesh(
   new THREE.TorusGeometry(7, 0.35, 8, 48),
@@ -190,6 +191,60 @@ const markerGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, col
 markerGlow.scale.set(26, 26, 1);
 markerGroup.add(markerRing, markerGlow);
 scene.add(markerGroup);
+
+/* ---------------- neighbouring stars ---------------- */
+const NEIGHBOURS = [
+  { c: 0xcfe4ff, s: 26, pos: [260, 90, -120] },   // Sirius
+  { c: 0xff7a4d, s: 34, pos: [-310, -50, 160] },  // Betelgeuse
+  { c: 0xffe6b8, s: 20, pos: [190, -130, 260] },  // Alpha Centauri
+  { c: 0xd6e9ff, s: 18, pos: [-160, 160, -210] }, // Vega
+  { c: 0xfff3d6, s: 16, pos: [110, 210, -160] },  // Polaris
+  { c: 0xff9a7a, s: 12, pos: [-260, 70, -260] },  // Proxima Centauri
+];
+const neighbourGroup = new THREE.Group();
+NEIGHBOURS.forEach((st) => {
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: st.c, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false }));
+  sp.position.set(...st.pos);
+  sp.scale.set(st.s, st.s, 1);
+  neighbourGroup.add(sp);
+});
+scene.add(neighbourGroup);
+
+/* ---------------- Oort Cloud ---------------- */
+const oortGroup = new THREE.Group();
+{
+  const N = isCoarse ? 800 : 1500;
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const r = rnd(380, 540);
+    const th = rnd(0, Math.PI * 2), ph = Math.acos(rnd(-1, 1));
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i * 3 + 2] = r * Math.cos(ph);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  oortGroup.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xafc4e8, size: 1.7, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })));
+}
+scene.add(oortGroup);
+
+/* ---------------- Kuiper Belt ---------------- */
+const kuiperGroup = new THREE.Group();
+{
+  const N = isCoarse ? 700 : 1300;
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const r = rnd(198, 262);
+    const a = rnd(0, Math.PI * 2);
+    pos[i * 3] = Math.cos(a) * r;
+    pos[i * 3 + 1] = rnd(-14, 14);
+    pos[i * 3 + 2] = Math.sin(a) * r;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  kuiperGroup.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x9fb8d8, size: 1.9, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, depthWrite: false })));
+}
+scene.add(kuiperGroup);
 
 /* ---------------- the Sun ---------------- */
 const systemGroup = new THREE.Group();
@@ -201,7 +256,25 @@ sunGlow.scale.set(46, 46, 1);
 sunGroup.add(sunMesh, sunGlow);
 systemGroup.add(sunGroup);
 
-/* ---------------- planets + moons ---------------- */
+/* Parker Solar Probe — tight fast orbit around the Sun */
+const parker = new THREE.Mesh(new THREE.OctahedronGeometry(0.45), new THREE.MeshBasicMaterial({ color: 0xcfd6dd }));
+systemGroup.add(parker);
+
+/* Aditya-L1 (Sun–Earth L1) and JWST (Sun–Earth L2) */
+function miniStation(bodyC, panelC) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.5, 0.5), new THREE.MeshBasicMaterial({ color: bodyC })));
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.06, 0.7), new THREE.MeshBasicMaterial({ color: panelC })));
+  return g;
+}
+const aditya = miniStation(0xd8b13a, 0x2a4d8f);
+aditya.position.set(44, 2.5, 0);
+systemGroup.add(aditya);
+const jwst = miniStation(0xc9a227, 0xc9a227);
+jwst.position.set(60, -3, 5);
+systemGroup.add(jwst);
+
+/* ---------------- planets + moons + our machines ---------------- */
 const PLANETS = [
   { name: 'MERCURY', x: 26, r: 1.0, tex: () => rockyTexture('#9c8e82', '#5e544b', '#c4b8aa'), spin: 0.05, moons: [] },
   { name: 'VENUS', x: 38, r: 1.6, tex: () => bandsTexture(['#e8c87e', '#d9a94f', '#f2e2b0', '#c98f3d']), spin: -0.03, moons: [] },
@@ -214,6 +287,26 @@ const PLANETS = [
   { name: 'PLUTO', x: 216, r: 0.9, tex: () => rockyTexture('#b8a88e', '#7a6c58', '#ddd0b8'), spin: 0.08, moons: [{ n: 'Charon', d: 2.8, s: 0.45, v: 0.7 }, { n: 'Nix', d: 3.8, s: 0.14, v: 1.1 }, { n: 'Hydra', d: 4.5, s: 0.14, v: 0.9 }] },
 ];
 const moonGray = new THREE.MeshBasicMaterial({ color: 0xb9c2cc });
+
+function makeISS() {
+  const g = new THREE.Group();
+  const white = new THREE.MeshBasicMaterial({ color: 0xe8ecf2 });
+  const blue = new THREE.MeshBasicMaterial({ color: 0x2a5d8f });
+  g.add(new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.2, 0.2), white));
+  const p1 = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.03, 0.42), blue); p1.position.x = -0.72;
+  const p2 = p1.clone(); p2.position.x = 0.72;
+  g.add(p1, p2);
+  return g;
+}
+function makeHubble() {
+  const g = new THREE.Group();
+  const tube = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.14, 0.55, 12), new THREE.MeshBasicMaterial({ color: 0xc8ccd4 }));
+  tube.rotation.z = Math.PI / 2;
+  const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.03, 0.3), new THREE.MeshBasicMaterial({ color: 0x2a4d8f }));
+  p1.position.set(0, -0.25, 0);
+  g.add(tube, p1);
+  return g;
+}
 
 PLANETS.forEach((pl) => {
   const grp = new THREE.Group();
@@ -230,35 +323,79 @@ PLANETS.forEach((pl) => {
     ring.rotation.x = -Math.PI / 2 + 0.35;
     grp.add(ring);
   }
-  // orbit line around the sun
   const pts = [];
   for (let a = 0; a <= 96; a++) pts.push(new THREE.Vector3(Math.cos(a / 96 * Math.PI * 2) * pl.x, 0, Math.sin(a / 96 * Math.PI * 2) * pl.x));
   systemGroup.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts),
     new THREE.LineBasicMaterial({ color: 0x8fa3c8, transparent: true, opacity: 0.13 })));
-  // moons
   pl.moonMeshes = [];
   pl.moons.forEach((m, mi) => {
     const mm = new THREE.Mesh(new THREE.SphereGeometry(m.s, 18, 18), moonGray);
     grp.add(mm);
     pl.moonMeshes.push({ mesh: mm, ...m, phase: mi * 1.7 });
   });
+  pl.craft = [];
+  if (pl.name === 'EARTH') {
+    const iss = makeISS(), hubble = makeHubble();
+    const tiangong = new THREE.Group();
+    tiangong.add(new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.16), new THREE.MeshBasicMaterial({ color: 0xd8d2c4 })));
+    tiangong.add(new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.16, 0.7), new THREE.MeshBasicMaterial({ color: 0x2a4d8f })));
+    grp.add(iss, hubble, tiangong);
+    pl.craft.push({ obj: iss, d: 2.7, v: 2.2, ph: 0 }, { obj: hubble, d: 3.2, v: 1.7, ph: 2.1 }, { obj: tiangong, d: 3.7, v: 1.4, ph: 4.2 });
+    const vikram = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.12, 0.16), new THREE.MeshBasicMaterial({ color: 0xd4a017 }));
+    vikram.position.set(0, 0.5, 0);
+    pl.moonMeshes[0].mesh.add(vikram);
+  }
+  if (pl.name === 'MARS') {
+    const mom = new THREE.Mesh(new THREE.OctahedronGeometry(0.3), new THREE.MeshBasicMaterial({ color: 0xff8c42 }));
+    grp.add(mom);
+    pl.craft.push({ obj: mom, d: 2.7, v: 1.5, ph: 1.0 });
+  }
+  if (pl.name === 'SATURN') {
+    const cassini = new THREE.Mesh(new THREE.OctahedronGeometry(0.35), new THREE.MeshBasicMaterial({ color: 0xd8d8d8 }));
+    grp.add(cassini);
+    pl.craft.push({ obj: cassini, d: 3.1, v: 1.1, ph: 0.5 });
+  }
   systemGroup.add(grp);
 });
+
+/* ---------------- the Voyagers (interstellar) ---------------- */
+const voyagerGroup = new THREE.Group();
+function makeVoyager() {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.OctahedronGeometry(1.1), new THREE.MeshBasicMaterial({ color: 0xd4a017 })));
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffd27a, transparent: true, opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.scale.set(7, 7, 1);
+  g.add(glow);
+  return g;
+}
+const voy1 = makeVoyager(); voy1.position.set(330, 26, 12);
+const voy2 = makeVoyager(); voy2.position.set(312, -20, -14);
+voyagerGroup.add(voy1, voy2);
+[[330, 26, 12], [312, -20, -14]].forEach(([x, y, z]) => {
+  voyagerGroup.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(216, 0, 0), new THREE.Vector3(x, y, z)]),
+    new THREE.LineBasicMaterial({ color: 0xd4a017, transparent: true, opacity: 0.22 })
+  ));
+});
+scene.add(voyagerGroup);
 
 /* ---------------- camera journey ---------------- */
 const stops = [
   { p: 0.00, name: 'MILKY WAY', pos: [0, 150, 620], look: [0, 0, 0] },
-  { p: 0.10, name: 'MILKY WAY', pos: [0, 70, 300], look: [0, 0, 0] },
-  { p: 0.17, name: 'THE SUN', pos: [0, 16, 100], look: [0, 0, 0] },
-  { p: 0.235, name: 'THE SUN', pos: [15, 6, 36], look: [0, 0, 0] },
+  { p: 0.075, name: 'STELLAR NEIGHBORHOOD', pos: [0, 80, 400], look: [0, 0, 0] },
+  { p: 0.122, name: 'OORT CLOUD', pos: [80, 140, 470], look: [0, 0, 0] },
+  { p: 0.175, name: 'THE SUN', pos: [0, 20, 110], look: [0, 0, 0] },
+  { p: 0.215, name: 'THE SUN', pos: [15, 6, 36], look: [0, 0, 0] },
 ];
-const FOCUS = { MERCURY: 0.305, VENUS: 0.375, EARTH: 0.445, MARS: 0.515, JUPITER: 0.585, SATURN: 0.655, URANUS: 0.725, NEPTUNE: 0.795, PLUTO: 0.865 };
+const FOCUS = { MERCURY: 0.265, VENUS: 0.315, EARTH: 0.365, MARS: 0.415, JUPITER: 0.465, SATURN: 0.515, URANUS: 0.565, NEPTUNE: 0.615, PLUTO: 0.665 };
 PLANETS.forEach((pl) => {
   const cx = pl.x - (6 + pl.r * 2.2);
   stops.push({ p: FOCUS[pl.name], name: pl.name, pos: [cx, 3 + pl.r * 0.8, 10 + pl.r * 2.4], look: [pl.x, 0, 0], planet: pl });
 });
-stops.push({ p: 0.945, name: 'FULL SYSTEM', pos: [108, 100, 185], look: [108, 0, 0] });
-stops.push({ p: 1.00, name: 'FULL SYSTEM', pos: [108, 100, 185], look: [108, 0, 0] });
+stops.push({ p: 0.712, name: 'KUIPER BELT', pos: [196, 26, 62], look: [228, 0, 0] });
+stops.push({ p: 0.77, name: 'VOYAGERS', pos: [296, 20, 58], look: [326, 8, 0] });
+stops.push({ p: 0.92, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] });
+stops.push({ p: 1.00, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] });
 
 const COL_KEYS = [
   { p: 0.00, c: new THREE.Color(0x04060d) },
@@ -269,57 +406,72 @@ const COL_KEYS = [
 ];
 const _pos = new THREE.Vector3(), _look = new THREE.Vector3(), _c = new THREE.Color();
 
-function keyed(stopsArr, p) {
-  let i = 0;
-  while (i < stopsArr.length - 2 && p > stopsArr[i + 1].p) i++;
-  const A = stopsArr[i], B = stopsArr[i + 1];
-  const t = sstep(A.p, B.p, p);
-  _pos.set(lerp(A.pos[0], B.pos[0], t), lerp(A.pos[1], B.pos[1], t), lerp(A.pos[2], B.pos[2], t));
-  _look.set(lerp(A.look[0], B.look[0], t), lerp(A.look[1], B.look[1], t), lerp(A.look[2], B.look[2], t));
-  return i;
-}
-
-/* ---------------- render one frame at playhead p ---------------- */
 function render(p, t) {
-  const si = keyed(stops, p);
+  let i = 0;
+  while (i < stops.length - 2 && p > stops[i + 1].p) i++;
+  const A = stops[i], B = stops[i + 1], tt = sstep(A.p, B.p, p);
+  _pos.set(lerp(A.pos[0], B.pos[0], tt), lerp(A.pos[1], B.pos[1], tt), lerp(A.pos[2], B.pos[2], tt));
+  _look.set(lerp(A.look[0], B.look[0], tt), lerp(A.look[1], B.look[1], tt), lerp(A.look[2], B.look[2], tt));
   camera.position.copy(_pos);
   camera.position.x += Math.sin(t * 0.45) * 0.6;
   camera.position.y += Math.cos(t * 0.38) * 0.45;
   camera.lookAt(_look);
   camera.rotation.z += Math.sin(p * Math.PI * 2) * 0.02;
 
-  // color grade + fog follows the journey (wide for galaxy, tight for system)
   let ci = 0;
   while (ci < COL_KEYS.length - 2 && p > COL_KEYS[ci + 1].p) ci++;
-  const CA = COL_KEYS[ci], CB = COL_KEYS[ci + 1], ct = sstep(CA.p, CB.p, p);
-  _c.copy(CA.c).lerp(CB.c, ct);
+  const CA = COL_KEYS[ci], CB = COL_KEYS[ci + 1], ct2 = sstep(CA.p, CB.p, p);
+  _c.copy(CA.c).lerp(CB.c, ct2);
   scene.background.copy(_c);
   scene.fog.color.copy(_c);
-  const fogT = sstep(0.08, 0.2, p);
+  const fogT = sstep(0.14, 0.30, p);
   scene.fog.near = lerp(420, 60, fogT);
   scene.fog.far = lerp(1700, 300, fogT);
 
-  // galaxy + marker
-  const eGal = 1 - sstep(0.16, 0.3, p);
+  const eGal = 1 - sstep(0.10, 0.20, p);
   galaxyGroup.visible = eGal > 0.004;
   galaxyGroup.children[0].material.opacity = 0.95 * eGal;
   galaxyGroup.rotation.y = t * 0.004;
-  const eMark = 1 - sstep(0.1, 0.17, p);
+
+  const eMark = 1 - sstep(0.05, 0.11, p);
   markerGroup.visible = eMark > 0.004;
   const mp = 1 + 0.12 * Math.sin(t * 3);
   markerRing.scale.set(mp, mp, 1);
   markerRing.material.opacity = 0.9 * eMark;
   markerGlow.material.opacity = 0.85 * eMark;
 
-  systemGroup.visible = p > 0.05;
+  const eStars = env(p, 0.02, 0.06, 0.17, 0.25);
+  neighbourGroup.visible = eStars > 0.004;
+  neighbourGroup.children.forEach((sp) => { sp.material.opacity = 0.9 * eStars; });
 
-  // sun
+  const eOort = env(p, 0.06, 0.12, 0.22, 0.32);
+  oortGroup.visible = eOort > 0.004;
+  oortGroup.children[0].material.opacity = 0.35 * eOort;
+  oortGroup.rotation.y = t * 0.002;
+
+  const eKui = env(p, 0.55, 0.65, 0.97, 1.02);
+  kuiperGroup.visible = eKui > 0.004;
+  kuiperGroup.children[0].material.opacity = 0.5 * eKui;
+
+  systemGroup.visible = p > 0.03;
+
   sunMesh.rotation.y = t * 0.02;
   const sg = 46 + Math.sin(t * 1.4) * 2.5;
   sunGlow.scale.set(sg, sg, 1);
 
-  // planets: spin + focused planet's moons orbit
-  let focusName = stops[si].name;
+  const focusName = A.name === B.name ? A.name : (tt < 0.5 ? A.name : B.name);
+
+  parker.visible = focusName === 'THE SUN';
+  if (parker.visible) {
+    const a = t * 3.0;
+    parker.position.set(Math.cos(a) * 15, Math.sin(a * 0.8) * 3, Math.sin(a) * 15);
+    parker.rotation.y = t * 2;
+  }
+  aditya.visible = p > 0.15 && p < 0.48;
+  aditya.rotation.y = t * 0.4;
+  jwst.visible = p > 0.30 && p < 0.50;
+  jwst.rotation.y = t * 0.3;
+
   PLANETS.forEach((pl) => {
     pl.mesh.rotation.y = t * pl.spin;
     const isFocus = focusName === pl.name;
@@ -330,7 +482,24 @@ function render(p, t) {
         m.mesh.position.set(Math.cos(a) * m.d * pl.r, Math.sin(a * 0.9) * m.d * pl.r * 0.25, Math.sin(a) * m.d * pl.r);
       }
     });
+    pl.craft.forEach((c) => {
+      c.obj.visible = isFocus;
+      if (isFocus) {
+        const a = t * c.v + c.ph;
+        c.obj.position.set(Math.cos(a) * c.d * pl.r, Math.sin(a * 0.7) * c.d * pl.r * 0.3, Math.sin(a) * c.d * pl.r);
+        c.obj.rotation.y = t * 0.8;
+      }
+    });
   });
+
+  const eVoy = env(p, 0.68, 0.74, 0.98, 1.02);
+  voyagerGroup.visible = eVoy > 0.004;
+  voyagerGroup.children.forEach((ch) => {
+    if (ch.isLine) ch.material.opacity = 0.22 * eVoy;
+    else if (ch.isSprite) ch.material.opacity = 0.7 * eVoy;
+    else ch.material.opacity = 0.9 * eVoy;
+  });
+  voy1.rotation.y = t * 0.5; voy2.rotation.y = -t * 0.4;
 
   renderer.render(scene, camera);
   return focusName;
