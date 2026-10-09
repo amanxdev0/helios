@@ -59,6 +59,15 @@ body {
   pointer-events: none;
 }
 .chapter.is-active .chapter-inner { opacity: 1; transform: translateY(0); }
+/* soft dark halo behind the text so names and facts stay readable over bright 3D */
+.chapter-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 62% 58% at 50% 50%, rgba(2, 4, 10, 0.62), rgba(2, 4, 10, 0) 70%);
+  pointer-events: none;
+}
+.chapter-inner > * { position: relative; z-index: 1; }
 
 .eyebrow {
   font-size: 0.8rem;

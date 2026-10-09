@@ -379,23 +379,45 @@ voyagerGroup.add(voy1, voy2);
 });
 scene.add(voyagerGroup);
 
-/* ---------------- camera journey ---------------- */
-const stops = [
-  { p: 0.00, name: 'MILKY WAY', pos: [0, 150, 620], look: [0, 0, 0] },
-  { p: 0.075, name: 'STELLAR NEIGHBORHOOD', pos: [0, 80, 400], look: [0, 0, 0] },
-  { p: 0.122, name: 'OORT CLOUD', pos: [80, 140, 470], look: [0, 0, 0] },
-  { p: 0.175, name: 'THE SUN', pos: [0, 20, 110], look: [0, 0, 0] },
-  { p: 0.215, name: 'THE SUN', pos: [15, 6, 36], look: [0, 0, 0] },
-];
-const FOCUS = { MERCURY: 0.265, VENUS: 0.315, EARTH: 0.365, MARS: 0.415, JUPITER: 0.465, SATURN: 0.515, URANUS: 0.565, NEPTUNE: 0.615, PLUTO: 0.665 };
-PLANETS.forEach((pl) => {
+/* ---------------- camera journey ----------------
+   Stop positions are measured from the real page layout (see measureChapters),
+   so the camera always frames exactly the chapter whose text is on screen. */
+const stops = [];
+const plByName = Object.fromEntries(PLANETS.map((pl) => [pl.name, pl]));
+function planetStop(pl, ch, at = 0.5) {
   const cx = pl.x - (6 + pl.r * 2.2);
-  stops.push({ p: FOCUS[pl.name], name: pl.name, pos: [cx, 3 + pl.r * 0.8, 10 + pl.r * 2.4], look: [pl.x, 0, 0], planet: pl });
-});
-stops.push({ p: 0.712, name: 'KUIPER BELT', pos: [196, 26, 62], look: [228, 0, 0] });
-stops.push({ p: 0.77, name: 'VOYAGERS', pos: [296, 20, 58], look: [326, 8, 0] });
-stops.push({ p: 0.92, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] });
-stops.push({ p: 1.00, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] });
+  return { ch, at, name: pl.name, pos: [cx, 3 + pl.r * 0.8, 10 + pl.r * 2.4], look: [pl.x, 0, 0], planet: pl };
+}
+/* ch = chapter index in DOM order · at = fraction through that chapter */
+const STOP_DEFS = [
+  { ch: 0, at: 0.5, name: 'HELIOS', pos: [0, 150, 620], look: [0, 0, 0] },
+  { ch: 1, at: 0.5, name: 'MILKY WAY', pos: [0, 150, 620], look: [0, 0, 0] },
+  { ch: 2, at: 0.5, name: 'STELLAR NEIGHBORHOOD', pos: [0, 80, 400], look: [0, 0, 0] },
+  { ch: 3, at: 0.5, name: 'OORT CLOUD', pos: [80, 140, 470], look: [0, 0, 0] },
+  { ch: 4, at: 0.25, name: 'THE SUN', pos: [0, 20, 110], look: [0, 0, 0] },
+  { ch: 4, at: 0.7, name: 'THE SUN', pos: [15, 6, 36], look: [0, 0, 0] },
+  planetStop(plByName.MERCURY, 5),
+  planetStop(plByName.VENUS, 6),
+  planetStop(plByName.EARTH, 7),
+  planetStop(plByName.MARS, 8),
+  planetStop(plByName.JUPITER, 9),
+  planetStop(plByName.SATURN, 10),
+  planetStop(plByName.URANUS, 11),
+  planetStop(plByName.NEPTUNE, 12),
+  planetStop(plByName.PLUTO, 13),
+  { ch: 14, at: 0.5, name: 'KUIPER BELT', pos: [196, 26, 62], look: [228, 0, 0] },
+  { ch: 15, at: 0.5, name: 'VOYAGERS', pos: [296, 20, 58], look: [326, 8, 0] },
+  { ch: 16, at: 0.3, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] },
+  { ch: 16, at: 0.8, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] },
+];
+function buildStops() {
+  stops.length = 0;
+  for (const d of STOP_DEFS) {
+    const ch = chapters[d.ch] || chapters[chapters.length - 1];
+    stops.push({ p: ch.from + (ch.to - ch.from) * d.at, name: d.name, pos: d.pos, look: d.look, planet: d.planet });
+  }
+  stops.sort((a, b) => a.p - b.p);
+}
 
 const COL_KEYS = [
   { p: 0.00, c: new THREE.Color(0x04060d) },
@@ -511,22 +533,42 @@ function readScroll() {
   targetP = max > 0 ? clamp01(scrollY / max) : 0;
 }
 addEventListener('scroll', readScroll, { passive: true });
+let resizeT = 0;
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
-  readScroll();
+  clearTimeout(resizeT);
+  resizeT = setTimeout(measureChapters, 150);
 });
+addEventListener('load', measureChapters);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => measureChapters());
 readScroll();
 
-const chapters = [...document.querySelectorAll('.chapter')].map((el) => ({
-  el, from: parseFloat(el.dataset.from), to: parseFloat(el.dataset.to), active: false,
-}));
+const chapterEls = [...document.querySelectorAll('.chapter')];
+const chapters = chapterEls.map((el) => ({ el, from: 0, to: 1, active: false }));
+/* Chapter windows are measured from the real page layout, so the text is always
+   visible (no dead gaps) and always matches what the camera is framing. */
+function measureChapters() {
+  const max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
+  chapterEls.forEach((el, i) => {
+    const from = clamp01(el.offsetTop / max);
+    const to = clamp01((el.offsetTop + el.offsetHeight) / max);
+    chapters[i].from = from;
+    chapters[i].to = i === chapters.length - 1 ? 1 : to;
+  });
+  buildStops();
+  readScroll();
+}
 let lastStop = '';
 function syncChapters(p, focusName) {
-  for (const ch of chapters) {
-    const on = p > ch.from && p < ch.to;
-    if (on !== ch.active) { ch.active = on; ch.el.classList.toggle('is-active', on); }
+  let ai = chapters.length - 1;
+  for (let i = 0; i < chapters.length; i++) {
+    if (p < chapters[i].to) { ai = i; break; }
+  }
+  for (let i = 0; i < chapters.length; i++) {
+    const on = i === ai;
+    if (on !== chapters[i].active) { chapters[i].active = on; chapters[i].el.classList.toggle('is-active', on); }
   }
   if (focusName !== lastStop) { lastStop = focusName; hudStop.textContent = focusName; }
   const pct = (p * 100).toFixed(2) + '%';
@@ -570,9 +612,11 @@ function frame() {
 
 renderer.setSize(innerWidth, innerHeight);
 
+measureChapters();
 if (reducedMotion) {
-  render(0.02, 0);
-  chapters.forEach((ch) => { ch.active = true; ch.el.classList.add('is-active'); });
+  const syncStatic = () => { readScroll(); syncChapters(targetP, render(targetP, 0)); };
+  addEventListener('scroll', syncStatic, { passive: true });
+  syncStatic();
 } else {
   frame();
 }
