@@ -496,8 +496,7 @@ function render(p, t) {
   voyagerGroup.visible = eVoy > 0.004;
   voyagerGroup.children.forEach((ch) => {
     if (ch.isLine) ch.material.opacity = 0.22 * eVoy;
-    else if (ch.isSprite) ch.material.opacity = 0.7 * eVoy;
-    else ch.material.opacity = 0.9 * eVoy;
+    else ch.traverse((c) => { if (c.material) c.material.opacity = (c.isSprite ? 0.7 : 0.9) * eVoy; });
   });
   voy1.rotation.y = t * 0.5; voy2.rotation.y = -t * 0.4;
 
