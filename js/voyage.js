@@ -246,6 +246,40 @@ const kuiperGroup = new THREE.Group();
 }
 scene.add(kuiperGroup);
 
+/* ---------------- Asteroid Belt (between Mars and Jupiter) ---------------- */
+const beltGroup = new THREE.Group();
+beltGroup.position.set(80, 0, 0);
+const beltFade = [];
+{
+  const N = isCoarse ? 350 : 700;
+  const rockMat = new THREE.MeshBasicMaterial({ color: 0x9a8a76, transparent: true, opacity: 0.9 });
+  rockMat.userData.base = 0.9;
+  beltFade.push(rockMat);
+  const rocks = new THREE.InstancedMesh(new THREE.DodecahedronGeometry(1, 0), rockMat, N);
+  const m = new THREE.Matrix4(), q = new THREE.Quaternion(), eu = new THREE.Euler(), sc = new THREE.Vector3(), pv = new THREE.Vector3();
+  for (let i = 0; i < N; i++) {
+    const r = rnd(5, 14);
+    const a = rnd(0, Math.PI * 2);
+    pv.set(Math.cos(a) * r, rnd(-2.6, 2.6) * (1 - r / 24), Math.sin(a) * r);
+    eu.set(rnd(0, Math.PI * 2), rnd(0, Math.PI * 2), rnd(0, Math.PI * 2));
+    q.setFromEuler(eu);
+    const s = rnd(0.12, 0.55);
+    sc.set(s, s * rnd(0.7, 1.3), s);
+    m.compose(pv, q, sc);
+    rocks.setMatrixAt(i, m);
+  }
+  rocks.instanceMatrix.needsUpdate = true;
+  beltGroup.add(rocks);
+  /* Ceres — the belt's dwarf planet, the biggest rock in the swarm */
+  const ceresMat = new THREE.MeshBasicMaterial({ map: rockyTexture('#a89a86', '#6e6252', '#cfc2ac'), transparent: true, opacity: 1 });
+  ceresMat.userData.base = 1;
+  beltFade.push(ceresMat);
+  const ceres = new THREE.Mesh(new THREE.SphereGeometry(1.15, 32, 32), ceresMat);
+  ceres.position.set(-4, 1.2, 7);
+  beltGroup.add(ceres);
+}
+scene.add(beltGroup);
+
 /* ---------------- the Sun ---------------- */
 const systemGroup = new THREE.Group();
 scene.add(systemGroup);
@@ -400,15 +434,16 @@ const STOP_DEFS = [
   planetStop(plByName.VENUS, 6),
   planetStop(plByName.EARTH, 7),
   planetStop(plByName.MARS, 8),
-  planetStop(plByName.JUPITER, 9),
-  planetStop(plByName.SATURN, 10),
-  planetStop(plByName.URANUS, 11),
-  planetStop(plByName.NEPTUNE, 12),
-  planetStop(plByName.PLUTO, 13),
-  { ch: 14, at: 0.5, name: 'KUIPER BELT', pos: [196, 26, 62], look: [228, 0, 0] },
-  { ch: 15, at: 0.5, name: 'VOYAGERS', pos: [296, 20, 58], look: [326, 8, 0] },
-  { ch: 16, at: 0.3, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] },
-  { ch: 16, at: 0.8, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] },
+  { ch: 9, at: 0.5, name: 'ASTEROID BELT', pos: [56, 16, 50], look: [82, 0, 0] },
+  planetStop(plByName.JUPITER, 10),
+  planetStop(plByName.SATURN, 11),
+  planetStop(plByName.URANUS, 12),
+  planetStop(plByName.NEPTUNE, 13),
+  planetStop(plByName.PLUTO, 14),
+  { ch: 15, at: 0.5, name: 'KUIPER BELT', pos: [196, 26, 62], look: [228, 0, 0] },
+  { ch: 16, at: 0.5, name: 'VOYAGERS', pos: [296, 20, 58], look: [326, 8, 0] },
+  { ch: 17, at: 0.3, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] },
+  { ch: 17, at: 0.8, name: 'FULL SYSTEM', pos: [165, 140, 300], look: [165, 0, 0] },
 ];
 function buildStops() {
   stops.length = 0;
@@ -474,6 +509,11 @@ function render(p, t) {
   const eKui = env(p, 0.55, 0.65, 0.97, 1.02);
   kuiperGroup.visible = eKui > 0.004;
   kuiperGroup.children[0].material.opacity = 0.5 * eKui;
+
+  const eBelt = env(p, 0.46, 0.52, 0.58, 0.64);
+  beltGroup.visible = eBelt > 0.004;
+  beltFade.forEach((mt) => { mt.opacity = mt.userData.base * eBelt; });
+  beltGroup.rotation.y = t * 0.05;
 
   systemGroup.visible = p > 0.03;
 
