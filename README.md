@@ -1,6 +1,6 @@
-# HELIOS — scroll from the Milky Way to Pluto
+# HELIOS : scroll from the Milky Way to Pluto
 
-A scroll-driven 3D voyage through the solar system. A cinematic WebGL film plays **under** the page as you scroll — start at a spiral Milky Way, dive to the Sun, then fly past every planet line-wise out to Pluto — while every word on top is **real HTML**: planet names, facts, and moon chips.
+A scroll-driven 3D voyage through the solar system. A cinematic WebGL film plays **under** the page as you scroll start at a spiral Milky Way, dive to the Sun, then fly past every planet line-wise out to Pluto while every word on top is **real HTML**: planet names, facts, and moon chips.
 
 No video files. No build step. Just open it.
 
@@ -14,7 +14,7 @@ No video files. No build step. Just open it.
 | 10% | Inbound — falling toward one ordinary yellow dwarf |
 | 20% | **Sol** — the Sun, 99.86% of the system's mass |
 | 27–89% | **Mercury → Venus → Earth → Mars → Jupiter → Saturn → Uranus → Neptune → Pluto**, line-wise |
-| 95% | The family portrait — the whole system in one frame |
+| 95% | The family portrait the whole system in one frame |
 
 Each planet stop shows its name, sharp facts, and its moons — Earth's Moon, Phobos & Deimos, the Galilean four, Titan & Enceladus, Triton, Charon and friends — with the major ones orbiting in 3D around you. Details: Saturn's rings, Uranus rolling on its side at 98°, procedurally painted planet textures (no image downloads).
 
