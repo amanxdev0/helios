@@ -51,6 +51,17 @@ function canvasTex(w, h, painter) {
 }
 const rnd = (a, b) => a + Math.random() * (b - a);
 
+/* Seeded random for stable placement of new effects */
+function mulberry32(seed) {
+  let st = seed >>> 0;
+  return () => {
+    st |= 0; st = (st + 0x6D2B79F5) | 0;
+    let z = Math.imul(st ^ (st >>> 15), 1 | st);
+    z = (z + Math.imul(z ^ (z >>> 7), 61 | z)) ^ z;
+    return ((z ^ (z >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
 const glowTex = canvasTex(128, 128, (g) => {
   const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
   gr.addColorStop(0, 'rgba(255,255,255,1)');
@@ -181,6 +192,28 @@ const galaxyGroup = new THREE.Group();
 galaxyGroup.rotation.x = 0.5;
 scene.add(galaxyGroup);
 
+/* ---------------- shooting stars (Milky Way chapter) ---------------- */
+const streakTex = canvasTex(128, 32, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, w, 0);
+  gr.addColorStop(0, 'rgba(255,255,255,0)');
+  gr.addColorStop(0.65, 'rgba(255,255,255,0.55)');
+  gr.addColorStop(1, 'rgba(255,255,255,1)');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+});
+const shooters = [];
+{
+  const r = mulberry32(777);
+  for (let i = 0; i < 6; i++) {
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: streakTex, color: 0xdfeaff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const x0 = (r() - 0.5) * 700, y0 = 60 + r() * 200, z0 = 60 + r() * 260;
+    sp.scale.set(70, 7, 1);
+    sp.position.set(x0, y0, z0);
+    sp.visible = false;
+    scene.add(sp);
+    shooters.push({ sp, x0, y0, z0, dx: 130 + r() * 120, dy: -(20 + r() * 50), off: i * 0.31, speed: 0.10 + r() * 0.06 });
+  }
+}
+
 /* "you are here" marker */
 const markerGroup = new THREE.Group();
 const markerRing = new THREE.Mesh(
@@ -227,6 +260,21 @@ const oortGroup = new THREE.Group();
   oortGroup.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0xafc4e8, size: 1.7, transparent: true, opacity: 0.35, blending: THREE.AdditiveBlending, depthWrite: false })));
 }
 scene.add(oortGroup);
+
+/* ---------------- the Oort comet ---------------- */
+const cometGroup = new THREE.Group();
+const cometHead = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xd8ecff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+cometHead.scale.set(16, 16, 1);
+cometGroup.add(cometHead);
+const cometTail = [];
+for (let i = 0; i < 24; i++) {
+  const s2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0x8fb8ff, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false }));
+  cometGroup.add(s2);
+  cometTail.push(s2);
+}
+cometGroup.visible = false;
+scene.add(cometGroup);
+const cometPath = (a) => [40 + Math.cos(a) * 380, 120 + Math.sin(a * 2) * 55, -40 + Math.sin(a) * 380];
 
 /* ---------------- Kuiper Belt ---------------- */
 const kuiperGroup = new THREE.Group();
@@ -289,6 +337,30 @@ const sunGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color:
 sunGlow.scale.set(46, 46, 1);
 sunGroup.add(sunMesh, sunGlow);
 systemGroup.add(sunGroup);
+
+/* ---------------- solar flares ---------------- */
+const FLARE_N = isCoarse ? 120 : 220;
+const flareGeo = new THREE.BufferGeometry();
+const flarePosArr = new Float32Array(FLARE_N * 3);
+const flareDir = new Float32Array(FLARE_N * 3);
+const flareSpd = new Float32Array(FLARE_N);
+{
+  const r = mulberry32(4242);
+  for (let i = 0; i < FLARE_N; i++) {
+    const th = r() * Math.PI * 2, ph = Math.acos(r() * 2 - 1);
+    flareDir[i * 3] = Math.sin(ph) * Math.cos(th);
+    flareDir[i * 3 + 1] = Math.sin(ph) * Math.sin(th);
+    flareDir[i * 3 + 2] = Math.cos(ph);
+    flareSpd[i] = 0.16 + r() * 0.14;
+    flarePosArr[i * 3 + 1] = -999;
+  }
+}
+flareGeo.setAttribute('position', new THREE.BufferAttribute(flarePosArr, 3));
+const flareMat = new THREE.PointsMaterial({ map: glowTex, color: 0xffa040, size: 3.2, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false });
+const flares = new THREE.Points(flareGeo, flareMat);
+flares.frustumCulled = false;
+flares.visible = false;
+systemGroup.add(flares);
 
 /* Parker Solar Probe — tight fast orbit around the Sun */
 const parker = new THREE.Mesh(new THREE.OctahedronGeometry(0.45), new THREE.MeshBasicMaterial({ color: 0xcfd6dd }));
@@ -490,6 +562,19 @@ function render(p, t) {
   galaxyGroup.children[0].material.opacity = 0.95 * eGal;
   galaxyGroup.rotation.y = t * 0.004;
 
+  const eShoot = env(p, 0.0, 0.015, 0.09, 0.15);
+  shooters.forEach((sh) => {
+    const cyc = (t * sh.speed + sh.off) % 1;
+    const life = cyc / 0.10;
+    const on = life < 1 && eShoot > 0.004;
+    sh.sp.visible = on;
+    if (on) {
+      sh.sp.position.set(sh.x0 + sh.dx * life, sh.y0 + sh.dy * life, sh.z0);
+      sh.sp.material.opacity = 0.9 * (1 - life) * eShoot;
+      sh.sp.material.rotation = Math.atan2(sh.dy, sh.dx);
+    }
+  });
+
   const eMark = 1 - sstep(0.05, 0.11, p);
   markerGroup.visible = eMark > 0.004;
   const mp = 1 + 0.12 * Math.sin(t * 3);
@@ -506,6 +591,24 @@ function render(p, t) {
   oortGroup.children[0].material.opacity = 0.35 * eOort;
   oortGroup.rotation.y = t * 0.002;
 
+  const eComet = env(p, 0.055, 0.10, 0.20, 0.30);
+  cometGroup.visible = eComet > 0.004;
+  if (cometGroup.visible) {
+    const ang = t * 0.22;
+    const hp = cometPath(ang);
+    cometHead.position.set(hp[0], hp[1], hp[2]);
+    cometHead.material.opacity = 0.95 * eComet;
+    for (let i = 0; i < cometTail.length; i++) {
+      const tp = cometPath(ang - (i + 1) * 0.045);
+      const ts = cometTail[i];
+      ts.position.set(tp[0], tp[1], tp[2]);
+      const k = 1 - i / cometTail.length;
+      const tsc = 13 * k + 2;
+      ts.scale.set(tsc, tsc, 1);
+      ts.material.opacity = 0.5 * k * eComet;
+    }
+  }
+
   const eKui = env(p, 0.55, 0.65, 0.97, 1.02);
   kuiperGroup.visible = eKui > 0.004;
   kuiperGroup.children[0].material.opacity = 0.5 * eKui;
@@ -520,6 +623,21 @@ function render(p, t) {
   sunMesh.rotation.y = t * 0.02;
   const sg = 46 + Math.sin(t * 1.4) * 2.5;
   sunGlow.scale.set(sg, sg, 1);
+
+  const eFlare = env(p, 0.13, 0.19, 0.42, 0.52);
+  flares.visible = eFlare > 0.004;
+  if (flares.visible) {
+    const pa = flareGeo.attributes.position.array;
+    for (let i = 0; i < FLARE_N; i++) {
+      const age = (t * flareSpd[i] + i * 0.61803) % 1;
+      const fr = 8.2 + age * 15;
+      pa[i * 3] = flareDir[i * 3] * fr;
+      pa[i * 3 + 1] = flareDir[i * 3 + 1] * fr;
+      pa[i * 3 + 2] = flareDir[i * 3 + 2] * fr;
+    }
+    flareGeo.attributes.position.needsUpdate = true;
+    flareMat.opacity = 0.85 * eFlare * (0.65 + 0.35 * Math.sin(t * 2.1));
+  }
 
   const focusName = A.name === B.name ? A.name : (tt < 0.5 ? A.name : B.name);
 
